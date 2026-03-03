@@ -6,7 +6,18 @@
       "Bash(git rm -r --cached node_modules .next tsconfig.tsbuildinfo next-env.d.ts .env.local)",
       "Bash(git -C /home/eshan/adx-bank status --short)",
       "Bash(git -C /home/eshan/adx-bank diff --stat HEAD)",
-      "Bash(git -C /home/eshan/adx-bank add .gitignore README.md src/app/login/page.tsx src/app/verify-login/page.tsx src/app/loans/page.tsx)"
+      "Bash(git -C /home/eshan/adx-bank add .gitignore README.md src/app/login/page.tsx src/app/verify-login/page.tsx src/app/loans/page.tsx)",
+      "Bash(git -C /home/eshan/adx-bank count-objects -vH)",
+      "Read(//home/eshan/adx-bank/{sum += $3} END {printf \"\"Total loose objects: %.2f KB\\\\n\"\", sum/**)",
+      "Bash(git -C /home/eshan/adx-bank branch -D fb_core_bank)",
+      "Bash(git -C /home/eshan/adx-bank branch -m clean_fb fb_core_bank)",
+      "Bash(git -C /home/eshan/adx-bank log --oneline)",
+      "Bash(git -C /home/eshan/adx-bank gc --aggressive --prune=now)",
+      "Bash(git -C /home/eshan/adx-bank reflog expire --expire=now --all)",
+      "Bash(git -C /home/eshan/adx-bank gc --prune=now)",
+      "Bash(ls /home/eshan/banking-platform/*.env*)",
+      "Bash(pg_isready)",
+      "Bash(redis-cli ping)"
     ],
     "additionalDirectories": [
       "/home/eshan/.claude/projects/-home-eshan-adx-bank/memory"

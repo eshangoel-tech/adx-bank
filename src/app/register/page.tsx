@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { api, getErrorMessage } from "@/services/api";
 import { ApiResponseViewer } from "@/components/ApiResponseViewer";
 
@@ -28,6 +29,8 @@ export default function RegisterPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  const router = useRouter();
+
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setForm((prev) => ({ ...prev, [e.target.name]: e.target.value }));
   };
@@ -43,6 +46,11 @@ export default function RegisterPage() {
         salary: form.salary ? parseFloat(form.salary) : undefined,
       });
       setResponse(data);
+      // On success, carry the email to the verify-email page
+      if (data?.success) {
+        sessionStorage.setItem("adx_pending_email", form.email);
+        setTimeout(() => router.push("/verify-email"), 800);
+      }
     } catch (err) {
       setError(getErrorMessage(err));
     } finally {

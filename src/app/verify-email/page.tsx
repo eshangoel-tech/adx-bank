@@ -1,12 +1,20 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { api, getErrorMessage } from "@/services/api";
 import { ApiResponseViewer } from "@/components/ApiResponseViewer";
 
 export default function VerifyEmailPage() {
   const [email, setEmail] = useState("");
+  const router = useRouter();
+
+  // Pre-fill email carried over from the register page
+  useEffect(() => {
+    const pending = sessionStorage.getItem("adx_pending_email");
+    if (pending) setEmail(pending);
+  }, []);
   const [otp, setOtp] = useState("");
   const [response, setResponse] = useState<unknown>(null);
   const [loading, setLoading] = useState(false);
@@ -20,6 +28,10 @@ export default function VerifyEmailPage() {
     try {
       const { data } = await api.post("/auth/verify-email", { email, otp });
       setResponse(data);
+      if (data?.success) {
+        sessionStorage.removeItem("adx_pending_email");
+        setTimeout(() => router.push("/login"), 800);
+      }
     } catch (err) {
       setError(getErrorMessage(err));
     } finally {
@@ -32,6 +44,10 @@ export default function VerifyEmailPage() {
       <h1 className="page-title">Verify Email</h1>
 
       <div className="card">
+        <div className="mb-4 bg-blue-50 border border-blue-200 rounded p-3 text-sm text-blue-700">
+          Check your email for a 6-digit OTP and enter it below.
+        </div>
+
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
             <label className="label">Email</label>
