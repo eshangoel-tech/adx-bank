@@ -1,0 +1,102 @@
+"use client";
+
+import { useState } from "react";
+import Link from "next/link";
+import { api, getErrorMessage } from "@/services/api";
+import { ApiResponseViewer } from "@/components/ApiResponseViewer";
+
+interface FormState {
+  full_name: string;
+  email: string;
+  phone: string;
+  password: string;
+  address: string;
+  salary: string;
+}
+
+export default function RegisterPage() {
+  const [form, setForm] = useState<FormState>({
+    full_name: "",
+    email: "",
+    phone: "",
+    password: "",
+    address: "",
+    salary: "",
+  });
+
+  const [response, setResponse] = useState<unknown>(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setForm((prev) => ({ ...prev, [e.target.name]: e.target.value }));
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+    setError(null);
+    setResponse(null);
+    try {
+      const { data } = await api.post("/auth/register", {
+        ...form,
+        salary: form.salary ? parseFloat(form.salary) : undefined,
+      });
+      setResponse(data);
+    } catch (err) {
+      setError(getErrorMessage(err));
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div className="max-w-md mx-auto">
+      <h1 className="page-title">Register</h1>
+
+      <div className="card">
+        <form onSubmit={handleSubmit} className="space-y-4">
+          {(
+            [
+              { name: "full_name", label: "Full Name", type: "text" },
+              { name: "email", label: "Email", type: "email" },
+              { name: "phone", label: "Phone", type: "text" },
+              { name: "password", label: "Password", type: "password" },
+              { name: "address", label: "Address", type: "text" },
+              { name: "salary", label: "Salary (INR)", type: "number" },
+            ] as const
+          ).map(({ name, label, type }) => (
+            <div key={name}>
+              <label className="label">{label}</label>
+              <input
+                className="input"
+                type={type}
+                name={name}
+                value={form[name]}
+                onChange={handleChange}
+                placeholder={label}
+              />
+            </div>
+          ))}
+
+          <button type="submit" disabled={loading} className="btn-primary w-full">
+            {loading ? "Registering..." : "Register"}
+          </button>
+        </form>
+
+        <ApiResponseViewer response={response} loading={loading} error={error} />
+
+        <p className="mt-4 text-sm text-gray-500 text-center">
+          Already registered?{" "}
+          <Link href="/verify-email" className="text-blue-600 hover:underline">
+            Verify email
+          </Link>{" "}
+          or{" "}
+          <Link href="/login" className="text-blue-600 hover:underline">
+            Login
+          </Link>
+        </p>
+      </div>
+    </div>
+  );
+}

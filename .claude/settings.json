@@ -1,0 +1,15 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(git -C /home/eshan/adx-bank ls-files --cached)",
+      "Bash(git -C /home/eshan/adx-bank show HEAD:.gitignore)",
+      "Bash(git rm -r --cached node_modules .next tsconfig.tsbuildinfo next-env.d.ts .env.local)",
+      "Bash(git -C /home/eshan/adx-bank status --short)",
+      "Bash(git -C /home/eshan/adx-bank diff --stat HEAD)",
+      "Bash(git -C /home/eshan/adx-bank add .gitignore README.md src/app/login/page.tsx src/app/verify-login/page.tsx src/app/loans/page.tsx)"
+    ],
+    "additionalDirectories": [
+      "/home/eshan/.claude/projects/-home-eshan-adx-bank/memory"
+    ]
+  }
+}
