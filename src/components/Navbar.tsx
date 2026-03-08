@@ -9,6 +9,7 @@ const NAV_LINKS = [
   { href: "/transfer", label: "Transfer" },
   { href: "/wallet", label: "Wallet" },
   { href: "/loans", label: "Loans" },
+  { href: "/assistant", label: "Assistant" },
 ];
 
 const AUTH_LINKS = [
