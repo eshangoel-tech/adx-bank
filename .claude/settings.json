@@ -17,7 +17,13 @@
       "Bash(git -C /home/eshan/adx-bank gc --prune=now)",
       "Bash(ls /home/eshan/banking-platform/*.env*)",
       "Bash(pg_isready)",
-      "Bash(redis-cli ping)"
+      "Bash(redis-cli ping)",
+      "Bash(npx tsc --noEmit)",
+      "Bash(./node_modules/.bin/tsc --noEmit)",
+      "Bash(node node_modules/typescript/bin/tsc --noEmit)",
+      "Bash(python3 -c \"import json,sys; d=json.load\\(sys.stdin\\); print\\(list\\(d.get\\(''dependencies'',{}\\).keys\\(\\)\\)[:10]\\)\")",
+      "Bash(npm install)",
+      "Bash(node_modules/.bin/next build)"
     ],
     "additionalDirectories": [
       "/home/eshan/.claude/projects/-home-eshan-adx-bank/memory"

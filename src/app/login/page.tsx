@@ -69,10 +69,10 @@ export default function LoginPage() {
 
         <ApiResponseViewer response={response} loading={loading} error={error} />
 
-        <div className="mt-4 text-sm text-gray-500 text-center space-y-1">
+        <div className="mt-4 text-sm text-slate-500 text-center">
           <p>
             No account?{" "}
-            <Link href="/register" className="text-blue-600 hover:underline">
+            <Link href="/register" className="text-blue-400 hover:text-blue-300 hover:underline">
               Register
             </Link>
           </p>

@@ -79,7 +79,7 @@ function WalletContent() {
   return (
     <div className="max-w-md">
       <div className="card">
-        <h2 className="text-base font-semibold mb-4">Add Money to Wallet</h2>
+        <h2 className="text-base font-semibold text-slate-100 mb-4">Add Money to Wallet</h2>
 
         <form onSubmit={handleInitiate} className="space-y-4">
           <div>
@@ -95,7 +95,7 @@ function WalletContent() {
               placeholder="Min ₹1, Max ₹20,000"
               required
             />
-            <p className="text-xs text-gray-400 mt-1">
+            <p className="text-xs text-slate-500 mt-1">
               Uses Razorpay Test Mode — no real money charged.
             </p>
           </div>
@@ -110,14 +110,14 @@ function WalletContent() {
         </form>
 
         {checkoutStatus && (
-          <div className="mt-4 bg-blue-50 border border-blue-200 rounded p-3 text-sm text-blue-700">
+          <div className="mt-4 bg-blue-900/20 border border-blue-800/60 rounded-lg p-3 text-sm text-blue-400">
             {checkoutStatus}
           </div>
         )}
 
         <ApiResponseViewer response={response} loading={loading} error={error} title="Order Response" />
 
-        <div className="mt-4 p-3 bg-yellow-50 border border-yellow-200 rounded text-xs text-yellow-700">
+        <div className="mt-4 p-3 bg-amber-900/20 border border-amber-800/50 rounded-lg text-xs text-amber-400">
           <strong>Test card:</strong> 4111 1111 1111 1111 · Exp: any future date ·
           CVV: any 3 digits · OTP: 1234
         </div>

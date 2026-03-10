@@ -46,14 +46,18 @@ function DashboardContent() {
 
   if (loading)
     return (
-      <div className="flex items-center gap-2 text-gray-500">
+      <div className="flex items-center gap-2 text-slate-400">
         <span className="inline-block w-4 h-4 border-2 border-blue-500 border-t-transparent rounded-full animate-spin" />
         Loading dashboard...
       </div>
     );
 
   if (error)
-    return <div className="text-red-600 bg-red-50 rounded p-3">{error}</div>;
+    return (
+      <div className="bg-red-900/20 border border-red-800/60 rounded-lg p-3 text-red-400">
+        {error}
+      </div>
+    );
 
   if (!data) return null;
 
@@ -62,31 +66,31 @@ function DashboardContent() {
       {/* User + Account summary */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div className="card">
-          <h2 className="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-3">
+          <h2 className="text-xs font-semibold text-slate-500 uppercase tracking-widest mb-3">
             Profile
           </h2>
-          <p className="text-lg font-bold">{data.user.full_name}</p>
-          <p className="text-sm text-gray-600">{data.user.email}</p>
-          <p className="text-sm text-gray-600">{data.user.phone}</p>
+          <p className="text-lg font-bold text-slate-100">{data.user.full_name}</p>
+          <p className="text-sm text-slate-400 mt-0.5">{data.user.email}</p>
+          <p className="text-sm text-slate-400">{data.user.phone}</p>
         </div>
 
         <div className="card">
-          <h2 className="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-3">
+          <h2 className="text-xs font-semibold text-slate-500 uppercase tracking-widest mb-3">
             Account
           </h2>
-          <p className="text-2xl font-bold text-green-600">
+          <p className="text-3xl font-bold text-emerald-400">
             ₹{data.account.balance}
           </p>
-          <p className="text-sm text-gray-600 mt-1">
+          <p className="text-sm text-slate-400 mt-1 font-mono">
             {data.account.account_number_masked}
           </p>
-          <p className="text-xs text-gray-400 mt-1">
+          <p className="text-xs text-slate-500 mt-1">
             {data.account.account_type} · {data.account.currency} ·{" "}
             <span
               className={
                 data.account.status === "ACTIVE"
-                  ? "text-green-600"
-                  : "text-red-600"
+                  ? "text-emerald-400"
+                  : "text-red-400"
               }
             >
               {data.account.status}
@@ -97,18 +101,20 @@ function DashboardContent() {
 
       {/* Recent transactions */}
       <div className="card">
-        <h2 className="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-3">
+        <h2 className="text-xs font-semibold text-slate-500 uppercase tracking-widest mb-4">
           Recent Transactions
         </h2>
         {data.recent_transactions.length === 0 ? (
-          <p className="text-sm text-gray-400">No transactions yet.</p>
+          <p className="text-sm text-slate-500">No transactions yet.</p>
         ) : (
-          <div className="divide-y divide-gray-100">
+          <div className="divide-y divide-slate-800">
             {data.recent_transactions.map((tx) => (
-              <div key={tx.id} className="py-2 flex justify-between items-center">
+              <div key={tx.id} className="py-3 flex justify-between items-center">
                 <div>
-                  <p className="text-sm font-medium">{tx.description || tx.reference_type}</p>
-                  <p className="text-xs text-gray-400">
+                  <p className="text-sm font-medium text-slate-200">
+                    {tx.description || tx.reference_type}
+                  </p>
+                  <p className="text-xs text-slate-500 mt-0.5">
                     {new Date(tx.created_at).toLocaleString()}
                   </p>
                 </div>
@@ -116,13 +122,13 @@ function DashboardContent() {
                   <p
                     className={`text-sm font-bold ${
                       tx.entry_type === "CREDIT"
-                        ? "text-green-600"
-                        : "text-red-600"
+                        ? "text-emerald-400"
+                        : "text-red-400"
                     }`}
                   >
                     {tx.entry_type === "CREDIT" ? "+" : "-"}₹{tx.amount}
                   </p>
-                  <p className="text-xs text-gray-400">Bal: ₹{tx.balance_after}</p>
+                  <p className="text-xs text-slate-500">Bal: ₹{tx.balance_after}</p>
                 </div>
               </div>
             ))}
@@ -132,7 +138,7 @@ function DashboardContent() {
 
       {/* Raw API response */}
       <details className="text-sm">
-        <summary className="cursor-pointer text-gray-500 hover:text-gray-700">
+        <summary className="cursor-pointer text-slate-500 hover:text-slate-300 select-none">
           View raw API response
         </summary>
         <ApiResponseViewer response={raw} loading={false} error={null} />

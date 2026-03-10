@@ -31,7 +31,6 @@ function TransferContent() {
         amount: parseFloat(amount),
       });
       setInitiateRes(data);
-      // Pre-fill transfer_id for confirm step
       const tid = data?.data?.transfer_id ?? data?.transfer_id;
       if (tid) setTransferId(tid);
     } catch (err) {
@@ -63,9 +62,12 @@ function TransferContent() {
     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
       {/* Step 1: Initiate */}
       <div className="card">
-        <h2 className="text-base font-semibold mb-4">
-          Step 1 — Initiate Transfer
-        </h2>
+        <div className="flex items-center gap-3 mb-5">
+          <span className="w-7 h-7 rounded-full bg-blue-600 text-white text-sm font-bold flex items-center justify-center">
+            1
+          </span>
+          <h2 className="text-base font-semibold text-slate-100">Initiate Transfer</h2>
+        </div>
         <form onSubmit={handleInitiate} className="space-y-3">
           <div>
             <label className="label">Receiver Account Number</label>
@@ -96,7 +98,14 @@ function TransferContent() {
             disabled={initiateLoading}
             className="btn-primary w-full"
           >
-            {initiateLoading ? "Initiating..." : "Initiate Transfer"}
+            {initiateLoading ? (
+              <span className="flex items-center justify-center gap-2">
+                <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                Initiating...
+              </span>
+            ) : (
+              "Initiate Transfer"
+            )}
           </button>
         </form>
         <ApiResponseViewer
@@ -108,14 +117,17 @@ function TransferContent() {
 
       {/* Step 2: Confirm */}
       <div className="card">
-        <h2 className="text-base font-semibold mb-4">
-          Step 2 — Confirm with OTP
-        </h2>
+        <div className="flex items-center gap-3 mb-5">
+          <span className="w-7 h-7 rounded-full bg-slate-700 text-slate-300 text-sm font-bold flex items-center justify-center">
+            2
+          </span>
+          <h2 className="text-base font-semibold text-slate-100">Confirm with OTP</h2>
+        </div>
         <form onSubmit={handleConfirm} className="space-y-3">
           <div>
             <label className="label">Transfer ID</label>
             <input
-              className="input"
+              className="input font-mono text-xs"
               type="text"
               value={transferId}
               onChange={(e) => setTransferId(e.target.value)}
@@ -126,11 +138,11 @@ function TransferContent() {
           <div>
             <label className="label">OTP (6 digits)</label>
             <input
-              className="input"
+              className="input tracking-[0.4em] text-center text-base font-bold"
               type="text"
               value={otp}
-              onChange={(e) => setOtp(e.target.value)}
-              placeholder="123456"
+              onChange={(e) => setOtp(e.target.value.replace(/\D/g, "").slice(0, 6))}
+              placeholder="• • • • • •"
               maxLength={6}
               required
             />
@@ -140,7 +152,14 @@ function TransferContent() {
             disabled={confirmLoading}
             className="btn-primary w-full"
           >
-            {confirmLoading ? "Confirming..." : "Confirm Transfer"}
+            {confirmLoading ? (
+              <span className="flex items-center justify-center gap-2">
+                <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                Confirming...
+              </span>
+            ) : (
+              "Confirm Transfer"
+            )}
           </button>
         </form>
         <ApiResponseViewer
