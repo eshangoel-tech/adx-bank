@@ -3,7 +3,6 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { api, getErrorMessage } from "@/services/api";
-import { ApiResponseViewer } from "@/components/ApiResponseViewer";
 import { useAuth } from "@/context/AuthContext";
 
 export default function VerifyLoginPage() {
@@ -15,7 +14,6 @@ export default function VerifyLoginPage() {
     if (pending) setIdentifier(pending);
   }, []);
   const [otp, setOtp] = useState("");
-  const [response, setResponse] = useState<unknown>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -26,13 +24,11 @@ export default function VerifyLoginPage() {
     e.preventDefault();
     setLoading(true);
     setError(null);
-    setResponse(null);
     try {
       const { data } = await api.post("/auth/verify-login-otp", {
         identifier,
         otp,
       });
-      setResponse(data);
 
       // Backend returns { success, data: { access_token, session_id, ... } }
       const payload = data?.data ?? data;
@@ -90,7 +86,7 @@ export default function VerifyLoginPage() {
           </button>
         </form>
 
-        <ApiResponseViewer response={response} loading={loading} error={error} />
+        {error && <p className="mt-3 text-sm text-red-400 bg-red-900/10 border border-red-800/40 rounded-lg px-3 py-2">{error}</p>}
       </div>
     </div>
   );

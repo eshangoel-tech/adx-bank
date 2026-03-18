@@ -4,7 +4,6 @@ import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { api, getErrorMessage } from "@/services/api";
-import { ApiResponseViewer } from "@/components/ApiResponseViewer";
 
 interface FormState {
   full_name: string;
@@ -25,7 +24,6 @@ export default function RegisterPage() {
     salary: "",
   });
 
-  const [response, setResponse] = useState<unknown>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -39,7 +37,6 @@ export default function RegisterPage() {
     e.preventDefault();
     setLoading(true);
     setError(null);
-    setResponse(null);
     try {
       const { data } = await api.post("/auth/register", {
         ...form,
@@ -92,7 +89,7 @@ export default function RegisterPage() {
           </button>
         </form>
 
-        <ApiResponseViewer response={response} loading={loading} error={error} />
+        {error && <p className="mt-3 text-sm text-red-400 bg-red-900/10 border border-red-800/40 rounded-lg px-3 py-2">{error}</p>}
 
         <p className="mt-4 text-sm text-gray-500 text-center">
           Already registered?{" "}

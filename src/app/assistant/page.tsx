@@ -35,16 +35,29 @@ function AssistantChat() {
     const start = async () => {
       try {
         const res = await api.post("/ai/assistant/start");
-        sessId = res.data.data.chat_sess_id;
+        const { chat_sess_id, chat_history } = res.data.data;
+        sessId = chat_sess_id;
         setChatSessId(sessId);
-        setMessages([
-          {
-            id: "welcome",
-            role: "assistant",
-            text: "Hello! I'm your ADX Bank assistant. How can I help you today?",
-            actions: [],
-          },
-        ]);
+
+        const history: Message[] = (chat_history ?? []).flatMap(
+          (turn: { user_message: string; assistant_response: string; created_at: string }, i: number) => [
+            { id: `h-user-${i}`, role: "user" as const, text: turn.user_message },
+            { id: `h-bot-${i}`, role: "assistant" as const, text: turn.assistant_response, actions: [] },
+          ]
+        );
+
+        if (history.length > 0) {
+          setMessages(history);
+        } else {
+          setMessages([
+            {
+              id: "welcome",
+              role: "assistant",
+              text: "Hello! I'm your ADX Bank assistant. How can I help you today?",
+              actions: [],
+            },
+          ]);
+        }
       } catch (err) {
         setError("Could not start assistant: " + getErrorMessage(err));
       } finally {
@@ -120,7 +133,7 @@ function AssistantChat() {
   if (starting) {
     return (
       <div className="flex items-center justify-center h-64">
-        <div className="flex flex-col items-center gap-3 text-gray-500">
+        <div className="flex flex-col items-center gap-3 text-slate-400">
           <div className="w-8 h-8 border-4 border-blue-600 border-t-transparent rounded-full animate-spin" />
           <span className="text-sm">Starting assistant…</span>
         </div>
@@ -133,8 +146,8 @@ function AssistantChat() {
       {/* Header */}
       <div className="flex items-center justify-between mb-4">
         <div>
-          <h1 className="text-xl font-bold text-gray-800">ADX Assistant</h1>
-          <p className="text-xs text-gray-500">Powered by AI · Your personal banking guide</p>
+          <h1 className="text-xl font-bold text-slate-100">ADX Assistant</h1>
+          <p className="text-xs text-slate-500">Powered by AI · Your personal banking guide</p>
         </div>
         <button
           onClick={stopSession}
@@ -163,7 +176,7 @@ function AssistantChat() {
                   className={`px-4 py-2.5 rounded-2xl text-sm leading-relaxed ${
                     msg.role === "user"
                       ? "bg-blue-600 text-white rounded-br-sm"
-                      : "bg-white border border-gray-200 text-gray-800 rounded-bl-sm shadow-sm"
+                      : "bg-slate-800 border border-slate-700 text-slate-200 rounded-bl-sm"
                   }`}
                 >
                   {msg.text}
@@ -177,7 +190,7 @@ function AssistantChat() {
                     <button
                       key={action.name}
                       onClick={() => router.push(action.url)}
-                      className="px-3 py-1.5 rounded-full text-xs font-medium bg-blue-50 text-blue-700 border border-blue-200 hover:bg-blue-100 transition-colors"
+                      className="px-3 py-1.5 rounded-full text-xs font-medium bg-blue-900/30 text-blue-400 border border-blue-700/50 hover:bg-blue-900/50 transition-colors"
                     >
                       {action.label} →
                     </button>
@@ -195,11 +208,11 @@ function AssistantChat() {
               <div className="w-7 h-7 rounded-full bg-blue-600 flex items-center justify-center text-white text-xs font-bold shrink-0">
                 A
               </div>
-              <div className="bg-white border border-gray-200 rounded-2xl rounded-bl-sm px-4 py-3 shadow-sm">
+              <div className="bg-slate-800 border border-slate-700 rounded-2xl rounded-bl-sm px-4 py-3">
                 <div className="flex gap-1 items-center h-4">
-                  <span className="w-1.5 h-1.5 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: "0ms" }} />
-                  <span className="w-1.5 h-1.5 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: "150ms" }} />
-                  <span className="w-1.5 h-1.5 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: "300ms" }} />
+                  <span className="w-1.5 h-1.5 bg-slate-500 rounded-full animate-bounce" style={{ animationDelay: "0ms" }} />
+                  <span className="w-1.5 h-1.5 bg-slate-500 rounded-full animate-bounce" style={{ animationDelay: "150ms" }} />
+                  <span className="w-1.5 h-1.5 bg-slate-500 rounded-full animate-bounce" style={{ animationDelay: "300ms" }} />
                 </div>
               </div>
             </div>
@@ -211,11 +224,11 @@ function AssistantChat() {
 
       {/* Error */}
       {error && (
-        <p className="text-xs text-red-600 mb-2 text-center">{error}</p>
+        <p className="text-xs text-red-400 mb-2 text-center">{error}</p>
       )}
 
       {/* Input */}
-      <div className="flex gap-2 items-center bg-white border border-gray-200 rounded-xl px-3 py-2 shadow-sm">
+      <div className="flex gap-2 items-center bg-slate-800 border border-slate-700 rounded-xl px-3 py-2">
         <input
           type="text"
           value={input}
@@ -223,7 +236,7 @@ function AssistantChat() {
           onKeyDown={handleKeyDown}
           placeholder="Ask me anything about your account…"
           disabled={loading}
-          className="flex-1 text-sm outline-none bg-transparent placeholder-gray-400 disabled:opacity-50"
+          className="flex-1 text-sm outline-none bg-transparent text-slate-100 placeholder-slate-500 disabled:opacity-50"
         />
         <button
           onClick={sendMessage}
@@ -237,7 +250,7 @@ function AssistantChat() {
         </button>
       </div>
 
-      <p className="text-center text-xs text-gray-400 mt-2">
+      <p className="text-center text-xs text-slate-600 mt-2">
         ADX Bank Assistant · Demo mode · Not financial advice
       </p>
     </div>

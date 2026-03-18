@@ -4,8 +4,8 @@ import { Navbar } from "@/components/Navbar";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "ADX Bank – Dev UI",
-  description: "Testing UI for ADX Bank backend",
+  title: "ADX Bank",
+  description: "ADX Bank — Your Digital Banking Platform",
 };
 
 export default function RootLayout({

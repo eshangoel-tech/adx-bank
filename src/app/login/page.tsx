@@ -4,12 +4,9 @@ import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { api, getErrorMessage } from "@/services/api";
-import { ApiResponseViewer } from "@/components/ApiResponseViewer";
-
 export default function LoginPage() {
   const [identifier, setIdentifier] = useState("");
   const [password, setPassword] = useState("");
-  const [response, setResponse] = useState<unknown>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const router = useRouter();
@@ -18,10 +15,8 @@ export default function LoginPage() {
     e.preventDefault();
     setLoading(true);
     setError(null);
-    setResponse(null);
     try {
       const { data } = await api.post("/auth/login", { identifier, password });
-      setResponse(data);
       // Pass identifier to the OTP page so the user doesn't have to retype it
       sessionStorage.setItem("adx_pending_identifier", identifier);
       // Redirect to OTP step after a short delay
@@ -67,7 +62,7 @@ export default function LoginPage() {
           </button>
         </form>
 
-        <ApiResponseViewer response={response} loading={loading} error={error} />
+        {error && <p className="mt-3 text-sm text-red-400 bg-red-900/10 border border-red-800/40 rounded-lg px-3 py-2">{error}</p>}
 
         <div className="mt-4 text-sm text-slate-500 text-center">
           <p>

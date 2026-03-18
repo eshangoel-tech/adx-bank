@@ -1,25 +1,11 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
+import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
-
-const NAV_LINKS = [
-  { href: "/dashboard", label: "Dashboard" },
-  { href: "/transfer", label: "Transfer" },
-  { href: "/wallet", label: "Wallet" },
-  { href: "/loans", label: "Loans" },
-  { href: "/assistant", label: "Assistant" },
-];
-
-const AUTH_LINKS = [
-  { href: "/login", label: "Login" },
-  { href: "/register", label: "Register" },
-];
 
 export function Navbar() {
   const { isAuthenticated, logout } = useAuth();
-  const pathname = usePathname();
   const router = useRouter();
 
   const handleLogout = () => {
@@ -34,50 +20,34 @@ export function Navbar() {
           href={isAuthenticated ? "/dashboard" : "/login"}
           className="font-bold text-blue-400 text-lg tracking-tight flex items-center gap-2"
         >
-          <span className="w-6 h-6 rounded bg-blue-600 text-white text-xs font-black flex items-center justify-center leading-none shrink-0">
+          <span className="w-7 h-7 rounded-lg bg-blue-600 text-white text-sm font-black flex items-center justify-center leading-none shrink-0">
             A
           </span>
           ADX Bank
         </Link>
 
-        <div className="flex items-center gap-0.5">
-          {isAuthenticated
-            ? NAV_LINKS.map(({ href, label }) => (
-                <Link
-                  key={href}
-                  href={href}
-                  className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
-                    pathname.startsWith(href)
-                      ? "bg-blue-600 text-white"
-                      : "text-slate-400 hover:text-slate-100 hover:bg-slate-800"
-                  }`}
-                >
-                  {label}
-                </Link>
-              ))
-            : AUTH_LINKS.map(({ href, label }) => (
-                <Link
-                  key={href}
-                  href={href}
-                  className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
-                    pathname === href
-                      ? "bg-blue-600 text-white"
-                      : "text-slate-400 hover:text-slate-100 hover:bg-slate-800"
-                  }`}
-                >
-                  {label}
-                </Link>
-              ))}
+        {isAuthenticated && (
+          <button
+            onClick={handleLogout}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium text-slate-400 hover:text-red-400 hover:bg-red-500/10 transition-colors"
+          >
+            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+            </svg>
+            Logout
+          </button>
+        )}
 
-          {isAuthenticated && (
-            <button
-              onClick={handleLogout}
-              className="ml-2 px-3 py-1.5 rounded-lg text-sm font-medium text-red-400 hover:bg-red-500/10 hover:text-red-300 transition-colors"
-            >
-              Logout
-            </button>
-          )}
-        </div>
+        {!isAuthenticated && (
+          <div className="flex items-center gap-1">
+            <Link href="/login" className="px-3 py-1.5 rounded-lg text-sm font-medium text-slate-400 hover:text-slate-100 hover:bg-slate-800 transition-colors">
+              Login
+            </Link>
+            <Link href="/register" className="px-3 py-1.5 rounded-lg text-sm font-medium bg-blue-600 text-white hover:bg-blue-500 transition-colors">
+              Register
+            </Link>
+          </div>
+        )}
       </div>
     </nav>
   );
