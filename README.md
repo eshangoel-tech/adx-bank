@@ -12,9 +12,9 @@ A production-style digital banking UI built with **Next.js 14**, **TypeScript**,
 |-------|--------|
 | Framework | Next.js 14 (App Router) |
 | Language | TypeScript |
-| Styling | Tailwind CSS + custom CSS classes in `globals.css` |
-| HTTP | Axios with JWT interceptor + auto-logout on 401 |
-| Auth | JWT in `localStorage` via React Context |
+| Styling | Tailwind CSS + custom component classes in `globals.css` |
+| HTTP | Axios — JWT interceptor + auto-logout on 401 |
+| Auth | JWT stored in `localStorage`, managed via React Context |
 
 ---
 
@@ -24,26 +24,25 @@ A production-style digital banking UI built with **Next.js 14**, **TypeScript**,
 src/
 ├── app/
 │   ├── layout.tsx            # Root layout: Navbar + Providers
-│   ├── globals.css           # Custom classes: .card, .input, .btn-primary, .label …
+│   ├── globals.css           # Custom classes: .card, .input, .btn-primary, .label, .loan-slider …
 │   ├── page.tsx              # Root redirect → /dashboard or /login
 │   ├── login/                # Step 1 of login — email/phone + password
 │   ├── verify-login/         # Step 2 — OTP verification, saves JWT on success
 │   ├── register/             # New account registration
 │   ├── verify-email/         # Email OTP verification after registration
-│   ├── dashboard/            # Home screen — balance card + feature grid + recent transactions
-│   ├── transfer/             # 2-step fund transfer with OTP
-│   ├── wallet/               # 2-step wallet top-up with OTP
-│   ├── loans/                # 4-step loan wizard (Eligibility → Simulate → Book → Confirm) + Manage
-│   ├── transactions/         # Full paginated transaction history
-│   ├── account/              # Account details with copy-to-clipboard account number
-│   ├── profile/              # Edit phone number and address
-│   └── assistant/            # AI banking assistant (multi-agent chat)
+│   ├── dashboard/            # Home — balance hero card + 7-feature grid + recent transactions
+│   ├── transfer/             # 2-step transfer: account number or mobile number
+│   ├── wallet/               # 2-step OTP wallet top-up
+│   ├── loans/                # 4-step loan wizard + Manage Loans with auto-load
+│   ├── transactions/         # Paginated transaction history
+│   ├── account/              # Account details + copy account number
+│   ├── profile/              # Edit profile — pre-filled from API, saves phone + address
+│   └── assistant/            # Multi-agent AI banking assistant with chat history restore
 │
 ├── components/
-│   ├── Navbar.tsx            # Logo + Logout only (navigation via dashboard cards)
+│   ├── Navbar.tsx            # Logo + Logout only (all navigation via dashboard cards)
 │   ├── Providers.tsx         # AuthProvider wrapper
-│   ├── ProtectedRoute.tsx    # Redirects unauthenticated users to /login
-│   └── ApiResponseViewer.tsx # Debug JSON viewer (not shown in production UI)
+│   └── ProtectedRoute.tsx    # Redirects unauthenticated users to /login
 │
 ├── context/
 │   └── AuthContext.tsx       # token + sessionId state, synced with localStorage
@@ -57,103 +56,112 @@ src/
 ## Pages & Features
 
 ### Auth Flow
+
 | Step | Page | API |
 |------|------|-----|
 | 1 | `/register` | `POST /auth/register` |
-| 2 | `/verify-email` | `POST /auth/verify-email` — activates account + ₹500 joining bonus |
+| 2 | `/verify-email` | `POST /auth/verify-email` — activates account, triggers ₹500 joining bonus via Celery |
 | 3 | `/login` | `POST /auth/login` — sends login OTP to email |
-| 4 | `/verify-login` | `POST /auth/verify-login-otp` — returns JWT |
+| 4 | `/verify-login` | `POST /auth/verify-login-otp` — returns JWT + session ID |
 
-Identifier (email/phone) is passed from `/login` → `/verify-login` via `sessionStorage` so the user doesn't retype it.
+Identifier (email/phone) is stored in `sessionStorage` after step 3 so step 4 pre-fills it automatically.
 
 ---
 
 ### Dashboard (`/dashboard`)
-- **Balance hero card** — live balance, masked account number, account status
-- **Feature grid** — 7 clickable cards: Transfer, Add Money, Loans, AI Assistant, Transactions, Account, Edit Profile
-- **Recent transactions** — last 5 entries with "View all →" link
+
+- **Balance hero card** — live balance, masked account number, account type, status
+- **Feature grid** — 7 clickable cards (Transfer, Add Money, Loans, AI Assistant, Transactions, Account, Edit Profile), each navigates to the relevant page
+- **Recent transactions** — last 5 entries with credit/debit color coding and "View all →" link
 
 ---
 
 ### Transfer (`/transfer`)
-Two-step OTP-verified fund transfer. Supports **two recipient lookup methods** (toggle on step 1):
 
-| Method | Request field | Example |
-|--------|--------------|---------|
-| Account number | `to_account_number` | `ADX0000012` |
-| Mobile number | `to_phone` | `9876543210` (91/+91 prefix stripped automatically) |
+Two-step OTP-verified fund transfer with **two recipient lookup methods**:
+
+| Method | Field sent | Notes |
+|--------|-----------|-------|
+| Account number | `to_account_number` | e.g. `ADX0000012` |
+| Mobile number | `to_phone` | 10 digits; `+91`/`91` prefix stripped automatically by backend |
 
 **Flow:**
-1. Select method, enter recipient identifier + amount → `POST /transfer/initiate`
-   - Response includes `receiver_name`, `receiver_account` (masked), `transfer_id`, `amount`
-2. **Confirmation screen** — shows recipient name + masked account with a "Verified" badge and an irreversibility warning before the user enters the OTP
-3. Enter OTP → `POST /transfer/confirm` → success screen
-
-**Error handling:** 422 if both fields provided, neither provided, or phone not 10 digits; 404 if account not found.
+1. Toggle method → enter identifier + amount → `POST /transfer/initiate`
+   - Returns `receiver_name`, `receiver_account` (masked), `transfer_id`, `amount`
+2. **Recipient confirmation screen** — shows name + masked account with "Verified" badge and irreversibility warning before OTP entry
+3. Enter OTP → `POST /transfer/confirm` → success screen with full transfer details
 
 ---
 
 ### Wallet — Add Money (`/wallet`)
-Two-step OTP-verified top-up (max ₹50,000):
-1. Enter amount (preset quick buttons: ₹500 / ₹1k / ₹5k / ₹10k) → `POST /wallet/add-money/initiate` — returns `topup_id`
-2. Enter OTP → `POST /wallet/add-money/confirm` (body: `{ topup_id, otp }`)
+
+Two-step OTP-verified top-up (max ₹50,000 per transaction):
+
+1. Enter amount (quick preset: ₹500 / ₹1k / ₹5k / ₹10k) → `POST /wallet/add-money/initiate` — returns `topup_id`
+2. Enter OTP → `POST /wallet/add-money/confirm` (`{ topup_id, otp }`)
 3. Success screen — "Add More Money" or "Back to Home"
 
 ---
 
 ### Loans (`/loans`)
-4-step wizard for applying, with a separate **Manage Loans** tab:
+
+4-step application wizard + **Manage Loans** tab (auto-loads on open):
 
 | Step | Endpoint | Notes |
 |------|----------|-------|
-| 1 — Eligibility | `GET /loan/eligibility` | Auto-advances after 1.8s; returns `max_eligible_amount`, `interest_rate`, `allowed_tenures`, `processing_fee_percent` |
-| 2 — Simulate | `POST /loan/simulate` | **Interactive slider** for amount (min/max from eligibility) + tenure pill buttons (only `allowed_tenures`). Live EMI calculated client-side as slider moves. EMI breakdown + principal/interest bar. API called once on "Proceed". |
-| 3 — Book | `POST /loan/book` | Amount/tenure pre-filled; triggers OTP email; returns `booking_id` |
-| 4 — Confirm | `POST /loan/confirm` | `booking_id` auto-filled; OTP from email |
-| Manage | `GET /loan/list` | Cards for each loan with status badge, EMI, outstanding amount |
-| Pay EMI | `POST /loan/{id}/pay` | Inline per-loan button; deducts one EMI from balance |
+| 1 — Eligibility | `GET /loan/eligibility` | Auto-advances after 1.8s; passes `max_eligible_amount`, `min_loan_amount`, `interest_rate`, `allowed_tenures`, `processing_fee_percent` to step 2 |
+| 2 — Simulate | `POST /loan/simulate` | Interactive range slider for amount; tenure pill buttons showing only `allowed_tenures`; live EMI + interest breakdown + principal/interest bar — all calculated client-side as the slider moves; API called once on "Proceed" |
+| 3 — Book | `POST /loan/book` | Amount/tenure pre-filled from step 2; triggers OTP email; returns `booking_id` |
+| 4 — Confirm | `POST /loan/confirm` | `booking_id` auto-filled; OTP from email; on success redirects to Manage Loans |
+| Manage Loans | `GET /loan/list` | Auto-fetches on tab open; loan cards with status badge, EMI, outstanding balance |
+| Pay EMI | `POST /loan/{id}/pay` | Per-card inline button; deducts one EMI; refreshes list on success |
 
-**Live EMI formula (client-side):**
+**Live EMI formula (client-side, no API call on slider move):**
 ```
-r = annual_rate / 100 / 12
+r  = annual_rate / 100 / 12
 EMI = P × r × (1+r)^n / ((1+r)^n − 1)
 ```
 
 ---
 
 ### Transactions (`/transactions`)
-- Paginated list (10 per page) — `GET /transactions?page=1&limit=10`
-- Credit/Debit color coding, reference type labels, balance after each tx
+
+- `GET /transactions?page=1&limit=10` — paginated, "Load More" on scroll
+- CREDIT (green) / DEBIT (red) color coding, reference type label, balance after each entry
 
 ---
 
 ### Account Details (`/account`)
-- `GET /account/details` — balance card, account type, currency, status, member since
-- Copy account number to clipboard
+
+- `GET /account/details` — balance hero card, account type, currency, status, member since
+- One-click copy account number to clipboard
 
 ---
 
 ### Edit Profile (`/profile`)
-- `PUT /user/profile` — update phone number and/or address (city, state)
+
+- On load: `GET /user/profile` — pre-fills phone, city, state from existing data
+- On save: `PUT /user/profile` — sends `{ phone, address: { city, state } }`
 
 ---
 
 ### AI Assistant (`/assistant`)
-Multi-agent AI chat powered by the backend's RAG + agent pipeline:
 
-- **Start session** → `POST /ai/assistant/start`
-- **Chat** → `POST /ai/assistant/chat` — sends message, receives reply + action buttons
-- **End session** → `POST /ai/assistant/stop`
+Multi-agent AI chat powered by the backend's RAG + LLM pipeline:
 
-Action buttons in chat responses redirect to the relevant page (e.g. "Apply for Loan" → `/loans`).
+- **Start** → `POST /ai/assistant/start` — creates session; **restores previous chat history** from `chat_history` array in response (each turn rendered as user + assistant bubbles); shows greeting only if history is empty
+- **Chat** → `POST /ai/assistant/chat` — full multi-agent response + optional action buttons
+- **End** → `POST /ai/assistant/stop` — closes session, returns to dashboard
+
+Action buttons in assistant responses navigate directly to the relevant page.
 
 | Agent | Handles |
 |-------|---------|
-| bank_manager | Account balance, summary, charges |
-| loan_officer | Loan eligibility, EMI, rejections |
+| bank_manager | Balance, account summary, charges |
+| loan_officer | Eligibility, EMI calculation, rejections |
 | accountant | Payment failures, transaction analysis |
-| support | Policy questions, OTP issues (uses RAG) |
-| receptionist | Greetings, unclear queries, routing |
+| support | Policy/rules questions, OTP issues (RAG-powered) |
+| receptionist | Greetings, ambiguous queries, routing |
 
 ---
 
@@ -163,7 +171,7 @@ Action buttons in chat responses redirect to the relevant page (e.g. "Apply for 
 # 1 — install dependencies
 npm install
 
-# 2 — configure backend URL
+# 2 — set backend URL
 echo "NEXT_PUBLIC_API_BASE_URL=http://localhost:8000/api/v1" > .env.local
 
 # 3 — start dev server
@@ -171,7 +179,7 @@ npm run dev
 # → http://localhost:3000
 ```
 
-The FastAPI backend must be running separately. See the `banking-platform` repo for backend setup.
+The FastAPI backend must be running separately. See the `banking-platform` repo for setup.
 
 ---
 
@@ -179,7 +187,7 @@ The FastAPI backend must be running separately. See the `banking-platform` repo 
 
 | Variable | Description |
 |----------|-------------|
-| `NEXT_PUBLIC_API_BASE_URL` | Base URL of the FastAPI backend (default: `http://localhost:8000/api/v1`) |
+| `NEXT_PUBLIC_API_BASE_URL` | Base URL of the FastAPI backend — default: `http://localhost:8000/api/v1` |
 
 **Never commit `.env.local`.**
 
@@ -187,9 +195,11 @@ The FastAPI backend must be running separately. See the `banking-platform` repo 
 
 ## Design Notes
 
-- **Navigation via dashboard** — the navbar is intentionally minimal (logo + logout only). All feature navigation happens through the dashboard card grid.
-- **ProtectedRoute** — client-side auth guard. Shows a spinner while auth state loads from `localStorage`, then redirects unauthenticated users to `/login`.
-- **Axios interceptors** — JWT is attached automatically on every request. Any `401` response clears auth and redirects to `/login`.
-- **OTP carry-over** — identifier is stored in `sessionStorage` after login step 1 so step 2 (`/verify-login`) can pre-fill it automatically.
-- **Auto-advance** — the loan eligibility step auto-advances to the simulate step after a successful check (1.8s delay with a spinner). Eligibility data (`max_eligible_amount`, `allowed_tenures`, `interest_rate`, `processing_fee_percent`) is passed to the Simulate step to power the interactive slider.
-- **Interactive loan simulator** — the Simulate step uses a styled range slider for amount and pill buttons for tenure. EMI, total interest, total payable, and a principal/interest bar chart all update in real time without any API calls. The backend `POST /loan/simulate` is called once when the user proceeds.
+- **Dashboard-first navigation** — navbar shows only logo + logout. All features are accessed via the dashboard card grid.
+- **No raw JSON viewers** — all API responses are rendered as structured UI. Errors appear as inline red banners.
+- **ProtectedRoute** — client-side auth guard; shows spinner while auth hydrates from `localStorage`, then redirects if unauthenticated.
+- **Axios interceptors** — Bearer token attached on every request; any `401` clears auth and redirects to `/login`.
+- **OTP carry-over** — login identifier stored in `sessionStorage` so the verify-login page pre-fills it.
+- **Eligibility → Simulate data flow** — eligibility API response is passed as props to the Simulate step so the slider uses real min/max/tenure values from the backend.
+- **Interactive EMI simulator** — range slider + tenure pills with real-time breakdown; zero extra API calls until the user clicks "Proceed".
+- **Chat history restore** — assistant session start response includes previous turns which are pre-rendered into the chat UI before the user types anything.
