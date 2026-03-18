@@ -42,7 +42,6 @@ export default function RegisterPage() {
         ...form,
         salary: form.salary ? parseFloat(form.salary) : undefined,
       });
-      setResponse(data);
       // On success, carry the email to the verify-email page
       if (data?.success) {
         sessionStorage.setItem("adx_pending_email", form.email);
